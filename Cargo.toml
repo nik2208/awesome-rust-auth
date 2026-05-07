@@ -1,0 +1,55 @@
+[package]
+name = "awesome-rust-auth"
+version = "0.1.0"
+edition = "2024"
+description = "Framework-agnostic Rust authentication crate inspired by awesome-node-auth"
+license = "MIT"
+repository = "https://github.com/nik2208/awesome-rust-auth"
+
+[features]
+default = []
+axum = ["dep:axum"]
+actix = ["dep:actix-web"]
+warp = ["dep:warp"]
+
+[dependencies]
+async-trait = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+validator = { version = "0.20", features = ["derive"] }
+jsonwebtoken = "9"
+argon2 = "0.5"
+rand = "0.8"
+time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+totp-rs = { version = "5", default-features = false, features = ["gen_secret", "otpauth"] }
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+handlebars = "6"
+wasmtime = "36.0.7"
+tokio = { version = "1", features = ["sync", "rt", "macros", "time"] }
+utoipa = "5"
+axum = { version = "0.8", optional = true }
+actix-web = { version = "4", optional = true }
+warp = { version = "0.3", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[[example]]
+name = "axum-postgres"
+path = "examples/axum-postgres/src/main.rs"
+required-features = ["axum"]
+
+[[example]]
+name = "actix-mongodb"
+path = "examples/actix-mongodb/src/main.rs"
+required-features = ["actix"]
+
+[[example]]
+name = "warp-sqlite"
+path = "examples/warp-sqlite/src/main.rs"
+required-features = ["warp"]
