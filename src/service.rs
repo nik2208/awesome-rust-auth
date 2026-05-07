@@ -11,10 +11,10 @@ use crate::{
     config::AuthConfig,
     error::{AuthError, AuthResult},
     models::{
-        AccessToken, Event, EventType, LoginInput, RefreshToken, Session, SignupInput, TenantId,
-        User, UserId,
+        AccessToken, CompleteLinkInput, Event, EventType, InitiateLinkInput, LinkedOAuthAccount,
+        LoginInput, RefreshToken, Session, SignupInput, TenantId, UnlinkAccountInput, User, UserId,
     },
-    traits::{EventBus, SessionStore, TelemetryStore, UserStore},
+    traits::{EventBus, PendingLinkStore, RolesPermissionsStore, SessionStore, TelemetryStore, UserStore},
 };
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -28,6 +28,7 @@ struct Claims {
     aud: String,
 }
 
+/// Core authentication service (email/password + token management).
 #[derive(Clone)]
 pub struct AuthService<U, S, T, E>
 where
@@ -36,11 +37,39 @@ where
     T: TelemetryStore,
     E: EventBus,
 {
-    config: AuthConfig,
+    pub(crate) config: AuthConfig,
     users: Arc<U>,
     sessions: Arc<S>,
     telemetry: Arc<T>,
     events: Arc<E>,
+}
+
+/// A lightweight token-minting helper that holds only the config.
+///
+/// Used by the magic-link and OTP service modules to mint tokens without
+/// duplicating the JWT logic.
+pub struct TokenMinter {
+    config: AuthConfig,
+}
+
+impl TokenMinter {
+    pub fn mint_access_token(
+        &self,
+        user_id: &UserId,
+        tenant_id: &TenantId,
+        session_id: &Uuid,
+    ) -> AuthResult<AccessToken> {
+        issue_token(&self.config, user_id, tenant_id, session_id, self.config.access_token_ttl.as_secs() as i64)
+    }
+
+    pub fn mint_refresh_token(
+        &self,
+        user_id: &UserId,
+        tenant_id: &TenantId,
+        refresh_token_id: &Uuid,
+    ) -> AuthResult<RefreshToken> {
+        issue_refresh_token(&self.config, user_id, tenant_id, refresh_token_id, self.config.refresh_token_ttl.as_secs() as i64)
+    }
 }
 
 impl<U, S, T, E> AuthService<U, S, T, E>
@@ -64,6 +93,14 @@ where
             telemetry,
             events,
         }
+    }
+
+    /// Returns a [`TokenMinter`] backed by this service's config.
+    ///
+    /// Used by auxiliary services (magic link, OTP) that need to mint tokens
+    /// without holding the full `AuthService`.
+    pub fn bare(config: &AuthConfig) -> TokenMinter {
+        TokenMinter { config: config.clone() }
     }
 
     pub async fn signup(&self, input: SignupInput) -> AuthResult<User> {
@@ -100,6 +137,9 @@ where
             password_hash: Some(password_hash),
             oauth_accounts: Vec::new(),
             is_mfa_enabled: false,
+            totp_secret: None,
+            is_email_verified: false,
+            display_name: None,
             created_at: OffsetDateTime::now_utc(),
         };
 
@@ -146,17 +186,15 @@ where
         };
         self.sessions.create_session(session.clone()).await?;
 
-        let access = self.issue_token(
+        let access = self.mint_access_token(
             &user.id,
             &user.tenant_id,
             &session.id,
-            self.config.access_token_ttl.as_secs() as i64,
         )?;
-        let refresh = self.issue_refresh_token(
+        let refresh = self.mint_refresh_token(
             &user.id,
             &user.tenant_id,
             &session.refresh_token_id,
-            self.config.refresh_token_ttl.as_secs() as i64,
         )?;
 
         self.emit_event(
@@ -197,17 +235,15 @@ where
         };
         self.sessions.create_session(new_session.clone()).await?;
 
-        let access = self.issue_token(
+        let access = self.mint_access_token(
             &new_session.user_id,
             &new_session.tenant_id,
             &new_session.id,
-            self.config.access_token_ttl.as_secs() as i64,
         )?;
-        let refresh = self.issue_refresh_token(
+        let refresh = self.mint_refresh_token(
             &new_session.user_id,
             &new_session.tenant_id,
             &new_session.refresh_token_id,
-            self.config.refresh_token_ttl.as_secs() as i64,
         )?;
 
         self.emit_event(
@@ -236,67 +272,173 @@ where
         .await
     }
 
-    fn issue_token(
+    /// Returns all active sessions for a user.
+    pub async fn list_sessions(&self, user_id: &UserId) -> AuthResult<Vec<Session>> {
+        self.sessions.list_sessions_for_user(user_id).await
+    }
+
+    /// Checks whether the user has all of `required` permissions in the given
+    /// tenant.  Returns `Err(AuthError::PermissionDenied)` when access is
+    /// denied.
+    pub async fn require_permissions<R: RolesPermissionsStore>(
+        &self,
+        rbac: &R,
+        tenant_id: &TenantId,
+        user_id: &UserId,
+        required: &[String],
+    ) -> AuthResult<()> {
+        let allowed = rbac
+            .user_has_permissions(tenant_id, user_id, required)
+            .await?;
+        if !allowed {
+            self.emit_event(
+                EventType::PermissionDenied,
+                Some(tenant_id.clone()),
+                Some(user_id.clone()),
+                serde_json::json!({"required": required}),
+            )
+            .await?;
+            return Err(AuthError::PermissionDenied);
+        }
+        Ok(())
+    }
+
+    // ── Account linking ───────────────────────────────────────────────────────
+
+    /// Step 1: stores a pending link token for the OAuth provider pair.
+    ///
+    /// Returns the pending token that must be passed to the OAuth callback.
+    pub async fn initiate_account_link<L: PendingLinkStore>(
+        &self,
+        links: &L,
+        input: InitiateLinkInput,
+    ) -> AuthResult<String> {
+        let token = links
+            .create_pending_link(&input.user_id, &input.provider, &input.provider_user_id)
+            .await?;
+
+        self.emit_event(
+            EventType::AccountLinked,
+            Some(input.tenant_id),
+            Some(input.user_id),
+            serde_json::json!({"provider": input.provider, "step": "initiated"}),
+        )
+        .await?;
+
+        Ok(token)
+    }
+
+    /// Step 2: consumes the pending link token and persists the OAuth link on
+    /// the user record.
+    pub async fn complete_account_link<L: PendingLinkStore>(
+        &self,
+        links: &L,
+        input: CompleteLinkInput,
+    ) -> AuthResult<User> {
+        let (user_id, linked_account) = links
+            .consume_pending_link(&input.pending_token)
+            .await?
+            .ok_or(AuthError::InvalidToken)?;
+
+        let user = self
+            .users
+            .get_user_by_id(&user_id)
+            .await?
+            .ok_or(AuthError::NotFound)?;
+
+        let mut links_vec = user.oauth_accounts.clone();
+        links_vec.push(linked_account.clone());
+        self.users
+            .update_oauth_links(&user_id, links_vec)
+            .await?;
+
+        let updated = self
+            .users
+            .get_user_by_id(&user_id)
+            .await?
+            .ok_or(AuthError::NotFound)?;
+
+        self.emit_event(
+            EventType::AccountLinked,
+            Some(user.tenant_id),
+            Some(user_id),
+            serde_json::json!({"provider": linked_account.provider}),
+        )
+        .await?;
+
+        Ok(updated)
+    }
+
+    /// Removes an OAuth provider link from the user's account.
+    pub async fn unlink_account(&self, input: UnlinkAccountInput) -> AuthResult<User> {
+        let user = self
+            .users
+            .get_user_by_id(&input.user_id)
+            .await?
+            .ok_or(AuthError::NotFound)?;
+
+        let remaining: Vec<LinkedOAuthAccount> = user
+            .oauth_accounts
+            .iter()
+            .filter(|a| a.provider != input.provider)
+            .cloned()
+            .collect();
+
+        if remaining.len() == user.oauth_accounts.len() {
+            return Err(AuthError::NotFound);
+        }
+
+        self.users
+            .update_oauth_links(&input.user_id, remaining)
+            .await?;
+
+        let updated = self
+            .users
+            .get_user_by_id(&input.user_id)
+            .await?
+            .ok_or(AuthError::NotFound)?;
+
+        self.emit_event(
+            EventType::AccountUnlinked,
+            Some(input.tenant_id),
+            Some(input.user_id),
+            serde_json::json!({"provider": input.provider}),
+        )
+        .await?;
+
+        Ok(updated)
+    }
+
+    // ── token minting ─────────────────────────────────────────────────────────
+
+    pub(crate) fn mint_access_token(
         &self,
         user_id: &UserId,
         tenant_id: &TenantId,
         session_id: &Uuid,
-        ttl_secs: i64,
     ) -> AuthResult<AccessToken> {
-        let now = OffsetDateTime::now_utc();
-        let exp = now + TimeDuration::seconds(ttl_secs);
-        let claims = Claims {
-            sub: user_id.0.to_string(),
-            tid: tenant_id.0.clone(),
-            sid: session_id.to_string(),
-            exp: exp.unix_timestamp(),
-            iat: now.unix_timestamp(),
-            iss: self.config.issuer.clone(),
-            aud: self.config.audience.clone(),
-        };
-        let token = encode(
-            &Header::new(Algorithm::HS256),
-            &claims,
-            &EncodingKey::from_secret(self.config.jwt_secret.as_bytes()),
+        issue_token(
+            &self.config,
+            user_id,
+            tenant_id,
+            session_id,
+            self.config.access_token_ttl.as_secs() as i64,
         )
-        .map_err(|err| AuthError::Crypto(err.to_string()))?;
-
-        Ok(AccessToken {
-            token,
-            expires_at: exp,
-        })
     }
 
-    fn issue_refresh_token(
+    pub(crate) fn mint_refresh_token(
         &self,
         user_id: &UserId,
         tenant_id: &TenantId,
         refresh_token_id: &Uuid,
-        ttl_secs: i64,
     ) -> AuthResult<RefreshToken> {
-        let now = OffsetDateTime::now_utc();
-        let exp = now + TimeDuration::seconds(ttl_secs);
-        let claims = Claims {
-            sub: user_id.0.to_string(),
-            tid: tenant_id.0.clone(),
-            sid: refresh_token_id.to_string(),
-            exp: exp.unix_timestamp(),
-            iat: now.unix_timestamp(),
-            iss: self.config.issuer.clone(),
-            aud: self.config.audience.clone(),
-        };
-        let token = encode(
-            &Header::new(Algorithm::HS256),
-            &claims,
-            &EncodingKey::from_secret(self.config.jwt_secret.as_bytes()),
+        issue_refresh_token(
+            &self.config,
+            user_id,
+            tenant_id,
+            refresh_token_id,
+            self.config.refresh_token_ttl.as_secs() as i64,
         )
-        .map_err(|err| AuthError::Crypto(err.to_string()))?;
-
-        Ok(RefreshToken {
-            token,
-            token_id: *refresh_token_id,
-            expires_at: exp,
-        })
     }
 
     fn decode_claims(&self, token: &str) -> AuthResult<Claims> {
@@ -329,4 +471,69 @@ where
         self.telemetry.persist_event(event.clone()).await?;
         self.events.publish(event).await
     }
+}
+
+// ── free functions shared with TokenMinter ────────────────────────────────────
+
+fn issue_token(
+    config: &AuthConfig,
+    user_id: &UserId,
+    tenant_id: &TenantId,
+    session_id: &Uuid,
+    ttl_secs: i64,
+) -> AuthResult<AccessToken> {
+    let now = OffsetDateTime::now_utc();
+    let exp = now + TimeDuration::seconds(ttl_secs);
+    let claims = Claims {
+        sub: user_id.0.to_string(),
+        tid: tenant_id.0.clone(),
+        sid: session_id.to_string(),
+        exp: exp.unix_timestamp(),
+        iat: now.unix_timestamp(),
+        iss: config.issuer.clone(),
+        aud: config.audience.clone(),
+    };
+    let token = encode(
+        &Header::new(Algorithm::HS256),
+        &claims,
+        &EncodingKey::from_secret(config.jwt_secret.as_bytes()),
+    )
+    .map_err(|err| AuthError::Crypto(err.to_string()))?;
+
+    Ok(AccessToken {
+        token,
+        expires_at: exp,
+    })
+}
+
+fn issue_refresh_token(
+    config: &AuthConfig,
+    user_id: &UserId,
+    tenant_id: &TenantId,
+    refresh_token_id: &Uuid,
+    ttl_secs: i64,
+) -> AuthResult<RefreshToken> {
+    let now = OffsetDateTime::now_utc();
+    let exp = now + TimeDuration::seconds(ttl_secs);
+    let claims = Claims {
+        sub: user_id.0.to_string(),
+        tid: tenant_id.0.clone(),
+        sid: refresh_token_id.to_string(),
+        exp: exp.unix_timestamp(),
+        iat: now.unix_timestamp(),
+        iss: config.issuer.clone(),
+        aud: config.audience.clone(),
+    };
+    let token = encode(
+        &Header::new(Algorithm::HS256),
+        &claims,
+        &EncodingKey::from_secret(config.jwt_secret.as_bytes()),
+    )
+    .map_err(|err| AuthError::Crypto(err.to_string()))?;
+
+    Ok(RefreshToken {
+        token,
+        token_id: *refresh_token_id,
+        expires_at: exp,
+    })
 }
