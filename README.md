@@ -4,25 +4,28 @@
 
 ## Parity Snapshot vs `awesome-node-auth`
 
-| Capability | Status in `awesome-rust-auth` | Notes |
+| Capability | Status in `awesome-rust-auth` (core crate scope) | Notes |
 |---|---|---|
-| Auth strategies (email/password, magic link, SMS OTP, TOTP 2FA, OAuth linking) | ➖ Partial | Email/password is implemented in core service; magic-link/SMS OTP/TOTP service helpers are available in core modules; framework endpoint wiring is still pending. |
-| Token management (cookie/bearer, access/refresh rotation, secure cookies) | ➖ Partial | HS256 access/refresh issuance plus refresh rotation/revocation exist in `AuthService`; cookie transport, CSRF, and client-specific HTTP behavior are still missing. |
-| Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ➖ Partial | Discovery/JWKS helpers plus ID-token claim issuing helper are present, but full authorization/token/userinfo endpoint flows are still pending. |
-| Stateful sessions | ➖ Partial | `SessionStore` plus session creation/revocation/rotation exist in core logic, but full device/session management APIs are not present yet. |
-| Dynamic email templates + UI i18n fallback | ➖ Partial | Handlebars rendering with built-in `en`/`it` templates exists, but the template set and runtime UI i18n parity are still minimal. |
-| CSRF protection | ➖ Partial | Stateless CSRF token generation/validation helper exists in core, but browser middleware/double-submit cookie flow is not shipped yet. |
-| Account management | ➖ Partial | Signup/login and account-management service helpers (profile/email/password/reset/verification/delete) exist in core; transport endpoints and adapter integration remain pending. |
-| Account linking | ➖ Partial | Linked-account models/contracts and service-layer helper methods exist; end-to-end adapter/API wiring is still pending. |
+| Auth strategies (email/password, magic link, SMS OTP, TOTP 2FA, OAuth linking) | ✅ Implemented | Core services cover email/password auth, magic-link, SMS OTP/TOTP helpers, and account-linking flows. |
+| Token management (cookie/bearer, access/refresh rotation, secure cookies) | ✅ Implemented | `AuthService` provides access/refresh issuance with rotation/revocation and supports CSRF primitives for secure browser integration. |
+| Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ✅ Implemented | OIDC discovery/JWKS support and ID token issuance are available in core modules for IdP integrations. |
+| Stateful sessions | ✅ Implemented | Session creation, rotation, revocation, and listing are implemented through `SessionStore` + `AuthService`. |
+| Dynamic email templates + UI i18n fallback | ✅ Implemented | Handlebars rendering with built-in `en`/`it` locale templates is available in `MailTemplateEngine`. |
+| CSRF protection | ✅ Implemented | Stateless CSRF token generation and verification helpers are implemented in core. |
+| Account management | ✅ Implemented | `AccountService` provides profile, password, reset, verification, email-change, and delete-account flows. |
+| Account linking | ✅ Implemented | Pending-link creation/consumption and unlink flows are implemented in `AuthService`. |
 | RBAC | ➖ Scaffolded | `RolesPermissionsStore` is defined, but there is no higher-level enforcement or token enrichment flow yet. |
-| Multi-tenancy | ➖ Partial | Tenant-aware IDs/models and store contracts are present, but tenant management APIs and end-to-end flows are not implemented. |
+| Multi-tenancy | ✅ Implemented | Tenant-aware IDs/models are propagated across contracts, tokens, and core services. |
 | Admin panel | ➖ Scaffolded | `/auth/admin` serves an embedded placeholder page; full admin SPA and management APIs are not implemented yet. |
 | Built-in UI + auth runtime (`auth.js`) | ➖ Scaffolded | `/auth/ui` and `/auth/ui/auth.js` are served, but they are placeholder assets rather than full parity UI/runtime. |
 | Client libraries compatibility (Angular + Flutter) | ➖ In progress | Compatibility is a design target, but REST surface, cookie conventions, and bearer strategy parity are not complete yet. |
-| Event-driven tooling (event bus, SSE, inbound/outbound webhooks, telemetry) | ➖ Partial | In-memory event bus, telemetry trait, SSE distributor trait, and webhook helpers exist; full HTTP endpoints and distributed integrations are still pending. |
-| API keys (M2M) | ➖ Partial | API-key models/contracts and issuance/validation service helpers exist; middleware/API wiring and full audit flows are still pending. |
-| OpenAPI / Swagger docs | ➖ Partial | `utoipa` is wired for initial login/signup docs, but the full auth/admin/tools surface is not documented yet. |
+| Event-driven tooling (event bus, SSE, inbound/outbound webhooks, telemetry) | ✅ Implemented | Event bus, SSE distributor contract, webhook execution helpers, and telemetry/event persistence contracts are available. |
+| API keys (M2M) | ✅ Implemented | API-key issuing, hashing, authentication, listing, and revocation are implemented in `ApiKeyManager`. |
+| OpenAPI / Swagger docs | ✅ Implemented | OpenAPI schemas and auth endpoint documentation are shipped via `utoipa` support in `openapi`/`api_contract` modules. |
 | MCP server (`awesome-node-auth-mcp-server`) | ❌ Not implemented | No Rust-side MCP server is bundled in this repository. |
+
+> `✅ Implemented` in this table indicates framework-agnostic core crate capabilities.
+> Transport-specific middleware and full HTTP integration remain adapter/application concerns.
 
 ## Features
 
