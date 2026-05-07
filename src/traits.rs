@@ -21,6 +21,22 @@ pub trait UserStore: Send + Sync {
         user_id: &UserId,
         links: Vec<LinkedOAuthAccount>,
     ) -> AuthResult<()>;
+    /// Updates display name and other mutable profile fields.
+    async fn update_profile(
+        &self,
+        user_id: &UserId,
+        display_name: Option<&str>,
+    ) -> AuthResult<User>;
+    /// Replaces the stored password hash.
+    async fn set_password_hash(&self, user_id: &UserId, hash: &str) -> AuthResult<()>;
+    /// Marks the user's email address as verified.
+    async fn set_email_verified(&self, user_id: &UserId) -> AuthResult<()>;
+    /// Replaces the user's email address (after verification).
+    async fn update_email(&self, user_id: &UserId, new_email: &str) -> AuthResult<()>;
+    /// Stores the TOTP secret and enables / disables MFA on the account.
+    async fn set_totp(&self, user_id: &UserId, secret: Option<&str>) -> AuthResult<()>;
+    /// Permanently removes the user record.
+    async fn delete_user(&self, user_id: &UserId) -> AuthResult<()>;
 }
 
 /// Persistence contract for refresh-token-backed sessions.
@@ -35,6 +51,8 @@ pub trait SessionStore: Send + Sync {
     ) -> AuthResult<Option<Session>>;
     /// Revokes the active session.
     async fn revoke_session(&self, session_id: &uuid::Uuid) -> AuthResult<()>;
+    /// Returns all active (non-revoked) sessions for a user.
+    async fn list_sessions_for_user(&self, user_id: &UserId) -> AuthResult<Vec<Session>>;
 }
 
 /// Persistence contract for API key issuance and validation.
@@ -46,6 +64,8 @@ pub trait ApiKeyStore: Send + Sync {
     async fn get_api_key(&self, id: &uuid::Uuid) -> AuthResult<Option<ApiKey>>;
     /// Revokes an API key.
     async fn revoke_api_key(&self, id: &uuid::Uuid) -> AuthResult<()>;
+    /// Returns all API keys belonging to a user.
+    async fn list_api_keys_for_user(&self, user_id: &UserId) -> AuthResult<Vec<ApiKey>>;
 }
 
 /// Persistence contract for role and permission checks in a tenant context.
@@ -96,4 +116,43 @@ pub trait SseDistributor: Send + Sync {
 pub trait EventBus: Send + Sync {
     /// Publishes an event to subscribers.
     async fn publish(&self, event: Event) -> AuthResult<()>;
+}
+
+/// Persistence contract for magic-link tokens.
+#[async_trait]
+pub trait MagicLinkStore: Send + Sync {
+    /// Stores a newly-generated magic-link token.
+    async fn create_magic_link(&self, token: MagicLinkToken) -> AuthResult<()>;
+    /// Consumes (deletes) a magic-link token and returns it if valid and unexpired.
+    async fn consume_magic_link(&self, token: &str) -> AuthResult<Option<MagicLinkToken>>;
+}
+
+/// Persistence contract for SMS / email OTP codes.
+#[async_trait]
+pub trait OtpStore: Send + Sync {
+    /// Stores a hashed OTP record, overwriting any existing one for the user.
+    async fn create_otp(&self, record: OtpRecord) -> AuthResult<()>;
+    /// Consumes the OTP record for the user, returning it if unexpired.
+    async fn consume_otp(&self, user_id: &UserId) -> AuthResult<Option<OtpRecord>>;
+}
+
+/// Persistence contract for password-reset tokens.
+#[async_trait]
+pub trait PasswordResetStore: Send + Sync {
+    /// Stores a newly-generated password-reset token.
+    async fn create_password_reset(&self, token: PasswordResetToken) -> AuthResult<()>;
+    /// Consumes (deletes) a password-reset token and returns it if valid and unexpired.
+    async fn consume_password_reset(&self, token: &str) -> AuthResult<Option<PasswordResetToken>>;
+}
+
+/// Persistence contract for email verification / email-change tokens.
+#[async_trait]
+pub trait EmailVerificationStore: Send + Sync {
+    /// Stores an email-verification token.
+    async fn create_email_verification(&self, token: EmailVerificationToken) -> AuthResult<()>;
+    /// Consumes an email-verification token and returns it if valid and unexpired.
+    async fn consume_email_verification(
+        &self,
+        token: &str,
+    ) -> AuthResult<Option<EmailVerificationToken>>;
 }

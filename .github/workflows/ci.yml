@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - ""
+          - "axum"
+          - "actix"
+          - "warp"
+          - "axum,actix,warp"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy (${{ matrix.features || 'no features' }})
+        run: |
+          if [ -z "${{ matrix.features }}" ]; then
+            cargo clippy -- -D warnings
+          else
+            cargo clippy --features "${{ matrix.features }}" -- -D warnings
+          fi
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - ""
+          - "axum"
+          - "actix"
+          - "warp"
+          - "axum,actix,warp"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test (${{ matrix.features || 'no features' }})
+        run: |
+          if [ -z "${{ matrix.features }}" ]; then
+            cargo test
+          else
+            cargo test --features "${{ matrix.features }}"
+          fi
+
+  build-examples:
+    name: Build examples
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+          - name: axum-postgres
+            feature: axum
+          - name: actix-mongodb
+            feature: actix
+          - name: warp-sqlite
+            feature: warp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build example ${{ matrix.example.name }}
+        run: cargo build --example ${{ matrix.example.name }} --features ${{ matrix.example.feature }}
+
+  msrv:
+    name: Minimum Supported Rust Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.82.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Check MSRV (no features)
+        run: cargo build

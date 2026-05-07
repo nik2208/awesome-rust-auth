@@ -6,21 +6,21 @@
 
 | Capability | Status in `awesome-rust-auth` | Notes |
 |---|---|---|
-| Auth strategies (email/password, magic link, SMS OTP, TOTP 2FA, OAuth linking) | ➖ Partial | Email/password is implemented in core service; OAuth linking types/contracts exist; magic-link, SMS OTP, and TOTP flows are not wired yet. |
+| Auth strategies (email/password, magic link, SMS OTP, TOTP 2FA, OAuth linking) | ➖ Partial | Email/password is implemented in core service; magic-link/SMS OTP/TOTP service helpers are available in core modules; framework endpoint wiring is still pending. |
 | Token management (cookie/bearer, access/refresh rotation, secure cookies) | ➖ Partial | HS256 access/refresh issuance plus refresh rotation/revocation exist in `AuthService`; cookie transport, CSRF, and client-specific HTTP behavior are still missing. |
-| Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ➖ Scaffolded | Discovery and JWKS helpers are present, but full OIDC authorization/token/userinfo endpoints are not implemented yet. |
+| Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ➖ Partial | Discovery/JWKS helpers plus ID-token claim issuing helper are present, but full authorization/token/userinfo endpoint flows are still pending. |
 | Stateful sessions | ➖ Partial | `SessionStore` plus session creation/revocation/rotation exist in core logic, but full device/session management APIs are not present yet. |
 | Dynamic email templates + UI i18n fallback | ➖ Partial | Handlebars rendering with built-in `en`/`it` templates exists, but the template set and runtime UI i18n parity are still minimal. |
-| CSRF protection | ❌ Not implemented | No browser CSRF middleware or double-submit cookie flow is currently shipped. |
-| Account management | ➖ Partial | Signup and login are implemented; profile update, email change, password reset/change, verification, and account deletion are still missing. |
-| Account linking | ➖ Scaffolded | Linked-account models and `PendingLinkStore` contract exist, but the end-to-end link/unlink flows are not implemented yet. |
+| CSRF protection | ➖ Partial | Stateless CSRF token generation/validation helper exists in core, but browser middleware/double-submit cookie flow is not shipped yet. |
+| Account management | ➖ Partial | Signup/login and account-management service helpers (profile/email/password/reset/verification/delete) exist in core; transport endpoints and adapter integration remain pending. |
+| Account linking | ➖ Partial | Linked-account models/contracts and service-layer helper methods exist; end-to-end adapter/API wiring is still pending. |
 | RBAC | ➖ Scaffolded | `RolesPermissionsStore` is defined, but there is no higher-level enforcement or token enrichment flow yet. |
 | Multi-tenancy | ➖ Partial | Tenant-aware IDs/models and store contracts are present, but tenant management APIs and end-to-end flows are not implemented. |
 | Admin panel | ➖ Scaffolded | `/auth/admin` serves an embedded placeholder page; full admin SPA and management APIs are not implemented yet. |
 | Built-in UI + auth runtime (`auth.js`) | ➖ Scaffolded | `/auth/ui` and `/auth/ui/auth.js` are served, but they are placeholder assets rather than full parity UI/runtime. |
 | Client libraries compatibility (Angular + Flutter) | ➖ In progress | Compatibility is a design target, but REST surface, cookie conventions, and bearer strategy parity are not complete yet. |
 | Event-driven tooling (event bus, SSE, inbound/outbound webhooks, telemetry) | ➖ Partial | In-memory event bus, telemetry trait, SSE distributor trait, and webhook helpers exist; full HTTP endpoints and distributed integrations are still pending. |
-| API keys (M2M) | ➖ Scaffolded | API-key models and store contracts exist, but issuance, auth middleware, and audit/API flows are not implemented yet. |
+| API keys (M2M) | ➖ Partial | API-key models/contracts and issuance/validation service helpers exist; middleware/API wiring and full audit flows are still pending. |
 | OpenAPI / Swagger docs | ➖ Partial | `utoipa` is wired for initial login/signup docs, but the full auth/admin/tools surface is not documented yet. |
 | MCP server (`awesome-node-auth-mcp-server`) | ❌ Not implemented | No Rust-side MCP server is bundled in this repository. |
 
