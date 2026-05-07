@@ -82,7 +82,7 @@ where
             .await?;
 
         self.emit(
-            EventType::Login,
+            EventType::ProfileUpdated,
             Some(input.tenant_id),
             Some(input.user_id),
             serde_json::json!({"action": "profile_updated"}),

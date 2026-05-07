@@ -141,6 +141,7 @@ pub enum EventType {
     OtpRequested,
     MfaEnabled,
     MfaDisabled,
+    ProfileUpdated,
     PasswordResetRequested,
     PasswordReset,
     EmailVerificationRequested,
