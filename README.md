@@ -4,7 +4,7 @@
 
 ## Parity Snapshot vs `awesome-node-auth`
 
-| Capability | Status in `awesome-rust-auth` | Notes |
+| Capability | Status in `awesome-rust-auth` (core crate scope) | Notes |
 |---|---|---|
 | Auth strategies (email/password, magic link, SMS OTP, TOTP 2FA, OAuth linking) | ✅ Implemented | Core services cover email/password auth, magic-link, SMS OTP/TOTP helpers, and account-linking flows. |
 | Token management (cookie/bearer, access/refresh rotation, secure cookies) | ✅ Implemented | `AuthService` provides access/refresh issuance with rotation/revocation and supports CSRF primitives for secure browser integration. |
@@ -23,6 +23,9 @@
 | API keys (M2M) | ✅ Implemented | API-key issuing, hashing, authentication, listing, and revocation are implemented in `ApiKeyManager`. |
 | OpenAPI / Swagger docs | ✅ Implemented | OpenAPI schemas and auth endpoint documentation are shipped via `utoipa` support in `openapi`/`api_contract` modules. |
 | MCP server (`awesome-node-auth-mcp-server`) | ❌ Not implemented | No Rust-side MCP server is bundled in this repository. |
+
+> `✅ Implemented` in this table indicates framework-agnostic core crate capabilities.
+> Transport-specific middleware and full HTTP integration remain adapter/application concerns.
 
 ## Features
 
