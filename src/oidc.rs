@@ -1,5 +1,6 @@
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::config::AuthConfig;
 
@@ -43,11 +44,12 @@ pub fn discovery(config: &AuthConfig, base_url: &str) -> OidcDiscovery {
 }
 
 pub fn jwks(config: &AuthConfig) -> JwkSet {
+    let key_fingerprint = Sha256::digest(config.jwt_secret.as_bytes());
     JwkSet {
         keys: vec![Jwk {
             kty: "oct".to_string(),
             alg: "HS256".to_string(),
-            k: URL_SAFE_NO_PAD.encode(config.jwt_secret.as_bytes()),
+            k: URL_SAFE_NO_PAD.encode(key_fingerprint),
             kid: "main".to_string(),
             r#use: "sig".to_string(),
         }],

@@ -255,7 +255,7 @@ where
             aud: self.config.audience.clone(),
         };
         let token = encode(
-            &Header::default(),
+            &Header::new(Algorithm::HS256),
             &claims,
             &EncodingKey::from_secret(self.config.jwt_secret.as_bytes()),
         )

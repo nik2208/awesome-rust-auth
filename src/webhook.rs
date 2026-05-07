@@ -1,6 +1,6 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
-use wasmtime::{Engine, Instance, Module, Store};
+use wasmtime::{Config, Engine, Linker, Module, Store, StoreLimits, StoreLimitsBuilder};
 
 use crate::error::{AuthError, AuthResult};
 
@@ -23,10 +23,29 @@ pub fn verify_webhook(secret: &str, payload: &[u8], expected_hex: &str) -> AuthR
 }
 
 pub fn run_inbound_action_wasm(module_bytes: &[u8]) -> AuthResult<()> {
-    let engine = Engine::default();
+    let mut config = Config::new();
+    config
+        .consume_fuel(true)
+        .wasm_multi_memory(false)
+        .wasm_reference_types(false);
+    let engine = Engine::new(&config).map_err(|err| AuthError::Sandbox(err.to_string()))?;
     let module =
         Module::new(&engine, module_bytes).map_err(|err| AuthError::Sandbox(err.to_string()))?;
-    let mut store = Store::new(&engine, ());
-    Instance::new(&mut store, &module, &[]).map_err(|err| AuthError::Sandbox(err.to_string()))?;
+    let mut store = Store::new(
+        &engine,
+        StoreLimitsBuilder::new()
+            .memory_size(8 * 1024 * 1024)
+            .instances(1)
+            .tables(1)
+            .build(),
+    );
+    store.limiter(|limits| limits);
+    store
+        .set_fuel(100_000)
+        .map_err(|err| AuthError::Sandbox(err.to_string()))?;
+    let linker = Linker::<StoreLimits>::new(&engine);
+    linker
+        .instantiate(&mut store, &module)
+        .map_err(|err| AuthError::Sandbox(err.to_string()))?;
     Ok(())
 }
