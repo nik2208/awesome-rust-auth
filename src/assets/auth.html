@@ -21,6 +21,7 @@
       <input id="password" name="password" type="password" required />
       <button type="submit" data-i18n="login">Login</button>
     </form>
+    <span id="auth-loading-text" data-i18n="loading" hidden>Signing in...</span>
     <div id="auth-notice"></div>
     <pre id="auth-status"></pre>
     <script src="/auth/ui/auth.js"></script>
@@ -29,13 +30,14 @@
         await window.AwesomeRustAuth.init();
         const form = document.getElementById("auth-login-form");
         const status = document.getElementById("auth-status");
+        const loadingText = document.getElementById("auth-loading-text");
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
           const payload = {
             email: document.getElementById("email").value,
             password: document.getElementById("password").value
           };
-          status.textContent = "Signing in...";
+          status.textContent = loadingText ? loadingText.textContent : "Signing in...";
           try {
             const response = await window.AwesomeRustAuth.login(payload);
             status.textContent = JSON.stringify(response, null, 2);
