@@ -10,6 +10,17 @@ fn config_builder_rejects_short_secret() {
 fn compatibility_notes_include_deviations() {
     let notes = compatibility_notes();
     assert!(!notes.known_deviations.is_empty());
+    assert!(
+        notes.known_deviations.iter().any(|note| note.contains("Built-in UI runtime parity is partial")),
+        "compatibility notes should mention built-in UI/runtime parity gap"
+    );
+    assert!(
+        notes
+            .known_deviations
+            .iter()
+            .any(|note| note.contains("Dynamic template-store parity is partial")),
+        "compatibility notes should mention template-store parity gap"
+    );
 }
 
 #[test]

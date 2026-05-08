@@ -10,7 +10,7 @@
 | Token management (cookie/bearer, access/refresh rotation, secure cookies) | ✅ Implemented | `AuthService` provides access/refresh issuance with rotation/revocation and supports CSRF primitives for secure browser integration. |
 | Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ✅ Implemented | OIDC discovery/JWKS support and ID token issuance are available in core modules for IdP integrations. |
 | Stateful sessions | ✅ Implemented | Session creation, rotation, revocation, and listing are implemented through `SessionStore` + `AuthService`. |
-| Dynamic email templates + UI i18n fallback | ✅ Implemented | Handlebars rendering with built-in `en`/`it` locale templates is available in `MailTemplateEngine`. |
+| Dynamic email templates + UI i18n fallback | ➖ Scaffolded | `MailTemplateEngine` currently ships only a built-in `welcome` template (`en`/`it`) plus manual registration hooks; `ITemplateStore`-style dynamic mail/UI i18n parity is not complete yet. |
 | CSRF protection | ✅ Implemented | Stateless CSRF token generation and verification helpers are implemented in core. |
 | Account management | ✅ Implemented | `AccountService` provides profile, password, reset, verification, email-change, and delete-account flows. |
 | Account linking | ✅ Implemented | Pending-link creation/consumption and unlink flows are implemented in `AuthService`. |
@@ -34,8 +34,8 @@
 - OAuth account-link model scaffolding
 - Tenant-aware domain model + RBAC store contract
 - Session, API key, telemetry, SSE, event-bus, and webhook traits
-- Embedded Admin UI (`/auth/admin`), Auth UI (`/auth/ui`), and `auth.js` (`/auth/ui/auth.js`)
-- Mail templating with Handlebars i18n templates (`en`, `it` built in)
+- Placeholder embedded Admin/Auth UI pages (`/auth/admin`, `/auth/ui`) and minimal `auth.js` helper (`/auth/ui/auth.js`)
+- Mail templating via Handlebars with built-in `welcome` locale templates (`en`, `it`) and custom template registration
 - OIDC discovery + JWKS helpers for IDP mode
 - OpenAPI generation via `utoipa`
 - Adapter modules behind feature flags for Axum, Actix-web, and Warp
@@ -104,6 +104,8 @@ Current explicit deviations (also available via `compatibility_notes()`):
 
 1. OAuth provider-specific request/response payload details are scaffolded but not fully parity-mapped yet.
 2. Inbound webhook dynamic action decorator DSL parity is pending; secure Wasmtime execution is provided.
+3. Built-in UI/runtime parity is partial: `/auth/ui` and `/auth/ui/auth.js` are placeholders and do not yet match the full Node package UI/config flow.
+4. Dynamic template-store parity is partial: only built-in `welcome` templates (`en`/`it`) are bundled, while full `ITemplateStore`-style dynamic mail/UI i18n management is not implemented.
 
 ## Examples
 

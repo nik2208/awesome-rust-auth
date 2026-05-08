@@ -61,6 +61,8 @@ pub fn compatibility_notes() -> AuthApiCompatibilityNotes {
         known_deviations: vec![
             "OAuth provider-specific payload shape remains TODO in this initial crate skeleton".to_string(),
             "Inbound webhook action decorators are scaffolded via Wasmtime runner, action DSL parity is pending".to_string(),
+            "Built-in UI runtime parity is partial: /auth/ui and /auth/ui/auth.js are placeholder assets without full config/headless flow parity".to_string(),
+            "Dynamic template-store parity is partial: only built-in welcome templates (en/it) are bundled, while full mail/UI i18n store parity is pending".to_string(),
         ],
     }
 }
