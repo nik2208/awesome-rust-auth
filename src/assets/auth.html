@@ -3,9 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <title>awesome-rust-auth</title>
+    <style>
+      body { font-family: sans-serif; margin: 2rem; max-width: 420px; }
+      label { display: block; margin-top: 1rem; }
+      input { width: 100%; padding: 0.5rem; }
+      button { margin-top: 1rem; padding: 0.5rem 0.75rem; }
+      #auth-status, #auth-notice { margin-top: 1rem; font-size: 0.9rem; }
+    </style>
   </head>
   <body>
-    <h1>Auth UI</h1>
+    <h1 data-i18n="title">Auth UI</h1>
+    <p data-i18n="subtitle">Sign in with your email and password</p>
+    <form id="auth-login-form">
+      <label for="email" data-i18n="email">Email</label>
+      <input id="email" name="email" type="email" required />
+      <label for="password" data-i18n="password">Password</label>
+      <input id="password" name="password" type="password" required />
+      <button type="submit" data-i18n="login">Login</button>
+    </form>
+    <span id="auth-loading-text" data-i18n="loading" hidden>Signing in...</span>
+    <div id="auth-notice"></div>
+    <pre id="auth-status"></pre>
     <script src="/auth/ui/auth.js"></script>
+    <script>
+      (async () => {
+        await window.AwesomeRustAuth.init();
+        const form = document.getElementById("auth-login-form");
+        const status = document.getElementById("auth-status");
+        const loadingText = document.getElementById("auth-loading-text");
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const payload = {
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+          };
+          status.textContent = loadingText ? loadingText.textContent : "Signing in...";
+          try {
+            const response = await window.AwesomeRustAuth.login(payload);
+            status.textContent = JSON.stringify(response, null, 2);
+          } catch (error) {
+            status.textContent = error.message;
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

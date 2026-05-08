@@ -1,1 +1,3 @@
-Hello {{name}}, welcome to awesome-rust-auth.
+<p>Your account has been created successfully.</p>
+{{#if tempPassword}}<p>Temporary password: <strong>{{tempPassword}}</strong></p>{{/if}}
+<p>Sign in here: <a href="{{loginUrl}}">{{loginUrl}}</a></p>

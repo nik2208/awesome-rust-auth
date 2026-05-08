@@ -59,8 +59,8 @@ pub fn compatibility_notes() -> AuthApiCompatibilityNotes {
         cookie_conventions: "HTTP-only refresh cookie + bearer access token".to_string(),
         bearer_conventions: "Authorization: Bearer <access_token>".to_string(),
         known_deviations: vec![
-            "OAuth provider-specific payload shape remains TODO in this initial crate skeleton".to_string(),
-            "Inbound webhook action decorators are scaffolded via Wasmtime runner, action DSL parity is pending".to_string(),
+            "OAuth provider-specific payload shape follows the Rust service contract and may differ in non-core integration layers".to_string(),
+            "Inbound webhook action decorators are executed through the built-in Wasmtime sandbox model".to_string(),
         ],
     }
 }
