@@ -43,7 +43,7 @@
 
 ```toml
 [dependencies]
-awesome-rust-auth = { version = "0.1.0", features = ["axum"] }
+awesome-rust-auth = { version = "1.9.0", features = ["axum"] }
 ```
 
 ## Configuration
