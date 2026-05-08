@@ -1,11 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>awesome-rust-auth admin</title>
-  </head>
-  <body>
-    <h1>Admin UI</h1>
-    <p>Served by awesome-rust-auth at /auth/admin.</p>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>awesome-node-auth Admin</title>
+  <link rel="stylesheet" href="__ADMIN_BASE_URL__/assets/admin.css">
+</head>
+<body>
+<div id="login">
+  <div class="login-card">
+    <h1>&#128272; awesome-node-auth</h1>
+    <p>Administration panel</p>
+    <div id="login-error" class="alert alert-error" style="display:none"></div>
+    <div style="display:flex;flex-direction:column;gap:.75rem">
+      <input type="password" id="secret-input" placeholder="Admin secret" autofocus>
+      <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="flash"></div>
+  <header>
+    <h1>&#128272; awesome-node-auth Admin</h1>
+    <span id="header-meta"></span>
+  </header>
+  <nav id="nav">
+    <button class="btn logout-btn" style="margin-left:auto;margin-top:.4rem;margin-bottom:.4rem;font-size:.75rem;padding:.25rem .75rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px" onclick="doLogout()">Logout</button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>window.__ADMIN_CONFIG__ = __ADMIN_CONFIG__;</script>
+<script src="__ADMIN_BASE_URL__/assets/admin.js"></script>
+</body>
 </html>

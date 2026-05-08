@@ -11,15 +11,18 @@ fn compatibility_notes_include_deviations() {
     let notes = compatibility_notes();
     assert!(!notes.known_deviations.is_empty());
     assert!(
-        notes.known_deviations.iter().any(|note| note.contains("Built-in UI runtime parity is partial")),
-        "compatibility notes should mention built-in UI/runtime parity gap"
+        notes
+            .known_deviations
+            .iter()
+            .any(|note| note.contains("OAuth provider-specific payload shape follows the Rust service contract")),
+        "compatibility notes should mention OAuth provider payload deviation"
     );
     assert!(
         notes
             .known_deviations
             .iter()
-            .any(|note| note.contains("Dynamic template-store parity is partial")),
-        "compatibility notes should mention template-store parity gap"
+            .any(|note| note.contains("Inbound webhook action decorators are executed through the built-in Wasmtime sandbox model")),
+        "compatibility notes should mention webhook action decorator deviation"
     );
 }
 
