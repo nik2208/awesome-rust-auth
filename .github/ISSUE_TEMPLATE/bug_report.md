@@ -29,7 +29,7 @@ What actually happens (error message, panic, wrong token, …).
 ## Environment
 
 - `awesome-rust-auth` version: <!-- e.g. 0.1.0 -->
-- Rust version (`rustc --version`): <!-- e.g. 1.82.0 -->
+- Rust version (`rustc --version`): <!-- e.g. 1.85.0 -->
 - Enabled features: <!-- e.g. axum -->
 - OS: <!-- e.g. Ubuntu 22.04 -->
 
