@@ -66,6 +66,7 @@ pub fn auth_ui_asset(path: &str) -> Option<(&'static str, &'static str)> {
     match path {
         "auth.js" => Some(("application/javascript", AUTH_JS)),
         "base.css" => Some(("text/css; charset=utf-8", AUTH_BASE_CSS)),
+        "auth.css" => Some(("text/css; charset=utf-8", AUTH_BASE_CSS)),
         "ui-i18n-keys.json" => Some(("application/json", AUTH_UI_I18N_KEYS_JSON)),
         _ => None,
     }

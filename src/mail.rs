@@ -12,6 +12,10 @@ pub const EN_MAGIC_LINK_TEMPLATE: &str = include_str!("templates/en/magic_link.h
 pub const IT_MAGIC_LINK_TEMPLATE: &str = include_str!("templates/it/magic_link.hbs");
 pub const EN_VERIFY_EMAIL_TEMPLATE: &str = include_str!("templates/en/verify_email.hbs");
 pub const IT_VERIFY_EMAIL_TEMPLATE: &str = include_str!("templates/it/verify_email.hbs");
+pub const EN_EMAIL_CHANGED_TEMPLATE: &str = include_str!("templates/en/email_changed.hbs");
+pub const IT_EMAIL_CHANGED_TEMPLATE: &str = include_str!("templates/it/email_changed.hbs");
+pub const EN_INVITATION_TEMPLATE: &str = include_str!("templates/en/invitation.hbs");
+pub const IT_INVITATION_TEMPLATE: &str = include_str!("templates/it/invitation.hbs");
 
 #[derive(Debug, Clone)]
 pub struct MailTemplateEngine {
@@ -31,6 +35,18 @@ impl MailTemplateEngine {
             .map_err(|err| AuthError::Config(err.to_string()))?;
         en.register_template_string("verify_email", EN_VERIFY_EMAIL_TEMPLATE)
             .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("password-reset", EN_PASSWORD_RESET_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("magic-link", EN_MAGIC_LINK_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("verify-email", EN_VERIFY_EMAIL_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("email_changed", EN_EMAIL_CHANGED_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("email-changed", EN_EMAIL_CHANGED_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        en.register_template_string("invitation", EN_INVITATION_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
         templates.insert("en".to_string(), en);
 
         let mut it = Handlebars::new();
@@ -41,6 +57,18 @@ impl MailTemplateEngine {
         it.register_template_string("magic_link", IT_MAGIC_LINK_TEMPLATE)
             .map_err(|err| AuthError::Config(err.to_string()))?;
         it.register_template_string("verify_email", IT_VERIFY_EMAIL_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("password-reset", IT_PASSWORD_RESET_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("magic-link", IT_MAGIC_LINK_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("verify-email", IT_VERIFY_EMAIL_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("email_changed", IT_EMAIL_CHANGED_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("email-changed", IT_EMAIL_CHANGED_TEMPLATE)
+            .map_err(|err| AuthError::Config(err.to_string()))?;
+        it.register_template_string("invitation", IT_INVITATION_TEMPLATE)
             .map_err(|err| AuthError::Config(err.to_string()))?;
         templates.insert("it".to_string(), it);
 

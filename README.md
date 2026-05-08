@@ -10,7 +10,7 @@
 | Token management (cookie/bearer, access/refresh rotation, secure cookies) | ✅ Implemented | `AuthService` provides access/refresh issuance with rotation/revocation and supports CSRF primitives for secure browser integration. |
 | Identity Provider (IdP) mode (OIDC discovery, authorization, token, userinfo, JWKS) | ✅ Implemented | OIDC discovery/JWKS support and ID token issuance are available in core modules for IdP integrations. |
 | Stateful sessions | ✅ Implemented | Session creation, rotation, revocation, and listing are implemented through `SessionStore` + `AuthService`. |
-| Dynamic email templates + UI i18n fallback | ✅ Implemented | Built-in localized templates (`welcome`, `password_reset`, `magic_link`, `verify_email`) are bundled for `en`/`it`, with runtime locale/template registration hooks. |
+| Dynamic email templates + UI i18n fallback | ✅ Implemented | Built-in localized templates (`welcome`, `password_reset`/`password-reset`, `magic_link`/`magic-link`, `verify_email`/`verify-email`, `email_changed`/`email-changed`, `invitation`) are bundled for `en`/`it`, with runtime locale/template registration hooks. |
 | CSRF protection | ✅ Implemented | Stateless CSRF token generation and verification helpers are implemented in core. |
 | Account management | ✅ Implemented | `AccountService` provides profile, password, reset, verification, email-change, and delete-account flows. |
 | Account linking | ✅ Implemented | Pending-link creation/consumption and unlink flows are implemented in `AuthService`. |
@@ -34,7 +34,7 @@
 - Tenant-aware domain model + RBAC store contract
 - Session, API key, telemetry, SSE, event-bus, and webhook traits
 - Embedded `awesome-node-auth`-compatible Admin/Auth UI runtimes (`/auth/admin`, `/auth/ui`) with `admin.js`, `auth.js`, and `/auth/ui/config`
-- Mail templating via Handlebars with built-in `welcome`, `password_reset`, `magic_link`, and `verify_email` locale templates (`en`, `it`) plus custom registration
+- Mail templating via Handlebars with built-in `welcome`, `password_reset`, `magic_link`, `verify_email`, `email_changed`, and `invitation` locale templates (`en`, `it`) plus custom registration
 - OIDC discovery + JWKS helpers for IDP mode
 - OpenAPI generation via `utoipa`
 - Adapter modules behind feature flags for Axum, Actix-web, and Warp

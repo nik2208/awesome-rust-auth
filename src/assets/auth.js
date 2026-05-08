@@ -106,7 +106,8 @@
 
         // Derive the auth backend origin so that every request to the same
         // domain as the auth server gets credentials/CSRF headers — not just
-        // requests whose path starts with apiPrefix.
+        // requests whose path starts with apiPrefix.  This covers routes like
+        // /mcp on the same host as /auth (cross-domain headless deployments).
         //
         // We use window.location.href as the base for resolving relative URLs.
         // Try/catch guards against malformed URLs; on failure both origins stay
