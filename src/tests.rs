@@ -31,3 +31,25 @@ fn english_template_renders() {
         .expect("template should render");
     assert!(rendered.contains("Niko"));
 }
+
+#[test]
+fn builtin_password_reset_templates_render_in_both_locales() {
+    let engine = MailTemplateEngine::with_builtin_locales().expect("engine should initialize");
+    let en = engine
+        .render(
+            "en",
+            "password_reset",
+            &serde_json::json!({"name": "Niko", "link": "https://example.com/reset"}),
+        )
+        .expect("english password_reset should render");
+    assert!(en.contains("https://example.com/reset"));
+
+    let it = engine
+        .render(
+            "it",
+            "password_reset",
+            &serde_json::json!({"name": "Niko", "link": "https://example.com/reset"}),
+        )
+        .expect("italian password_reset should render");
+    assert!(it.contains("https://example.com/reset"));
+}
