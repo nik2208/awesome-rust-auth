@@ -22,8 +22,8 @@ use crate::{
     config::AuthConfig,
     error::{AuthError, AuthResult},
     models::{
-        AccessToken, Event, EventType, MagicLinkToken, RefreshToken, RequestMagicLinkInput, Session,
-        TenantId, UserId,
+        AccessToken, Event, EventType, MagicLinkToken, RefreshToken, RequestMagicLinkInput,
+        Session, TenantId, UserId,
     },
     service::AuthService,
     traits::{EventBus, MagicLinkStore, SessionStore, TelemetryStore, UserStore},

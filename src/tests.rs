@@ -11,10 +11,8 @@ fn compatibility_notes_include_deviations() {
     let notes = compatibility_notes();
     assert!(!notes.known_deviations.is_empty());
     assert!(
-        notes
-            .known_deviations
-            .iter()
-            .any(|note| note.contains("OAuth provider-specific payload shape follows the Rust service contract")),
+        notes.known_deviations.iter().any(|note| note
+            .contains("OAuth provider-specific payload shape follows the Rust service contract")),
         "compatibility notes should mention OAuth provider payload deviation"
     );
     assert!(

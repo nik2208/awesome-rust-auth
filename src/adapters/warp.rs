@@ -11,12 +11,10 @@ pub fn routes() -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + 
     let admin_assets = warp::path!("auth" / "admin" / "assets" / String)
         .and(warp::get())
         .map(|asset: String| match asset.as_str() {
-            "admin.css" => warp::reply::with_header(
-                ui::ADMIN_CSS,
-                "content-type",
-                "text/css; charset=utf-8",
-            )
-            .into_response(),
+            "admin.css" => {
+                warp::reply::with_header(ui::ADMIN_CSS, "content-type", "text/css; charset=utf-8")
+                    .into_response()
+            }
             "admin.js" => {
                 warp::reply::with_header(ui::ADMIN_JS, "content-type", "application/javascript")
                     .into_response()
@@ -28,7 +26,9 @@ pub fn routes() -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + 
         .map(|| warp::reply::html(ui::AUTH_LOGIN_HTML));
     let auth_ui_config = warp::path!("auth" / "ui" / "config")
         .and(warp::get())
-        .map(|| warp::reply::with_header(ui::AUTH_UI_CONFIG_JSON, "content-type", "application/json"));
+        .map(|| {
+            warp::reply::with_header(ui::AUTH_UI_CONFIG_JSON, "content-type", "application/json")
+        });
     let auth_ui_tail = warp::path("auth")
         .and(warp::path("ui"))
         .and(warp::path::tail())
@@ -36,7 +36,8 @@ pub fn routes() -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + 
         .map(|tail: warp::path::Tail| {
             let path = tail.as_str().trim_matches('/');
             if let Some((content_type, content)) = ui::auth_ui_asset(path) {
-                return warp::reply::with_header(content, "content-type", content_type).into_response();
+                return warp::reply::with_header(content, "content-type", content_type)
+                    .into_response();
             }
             if let Some(page) = ui::auth_ui_page(path) {
                 return warp::reply::html(page).into_response();

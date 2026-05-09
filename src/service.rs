@@ -14,7 +14,9 @@ use crate::{
         AccessToken, CompleteLinkInput, Event, EventType, InitiateLinkInput, LinkedOAuthAccount,
         LoginInput, RefreshToken, Session, SignupInput, TenantId, UnlinkAccountInput, User, UserId,
     },
-    traits::{EventBus, PendingLinkStore, RolesPermissionsStore, SessionStore, TelemetryStore, UserStore},
+    traits::{
+        EventBus, PendingLinkStore, RolesPermissionsStore, SessionStore, TelemetryStore, UserStore,
+    },
 };
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -59,7 +61,13 @@ impl TokenMinter {
         tenant_id: &TenantId,
         session_id: &Uuid,
     ) -> AuthResult<AccessToken> {
-        issue_token(&self.config, user_id, tenant_id, session_id, self.config.access_token_ttl.as_secs() as i64)
+        issue_token(
+            &self.config,
+            user_id,
+            tenant_id,
+            session_id,
+            self.config.access_token_ttl.as_secs() as i64,
+        )
     }
 
     pub fn mint_refresh_token(
@@ -68,7 +76,13 @@ impl TokenMinter {
         tenant_id: &TenantId,
         refresh_token_id: &Uuid,
     ) -> AuthResult<RefreshToken> {
-        issue_refresh_token(&self.config, user_id, tenant_id, refresh_token_id, self.config.refresh_token_ttl.as_secs() as i64)
+        issue_refresh_token(
+            &self.config,
+            user_id,
+            tenant_id,
+            refresh_token_id,
+            self.config.refresh_token_ttl.as_secs() as i64,
+        )
     }
 }
 
@@ -100,7 +114,9 @@ where
     /// Used by auxiliary services (magic link, OTP) that need to mint tokens
     /// without holding the full `AuthService`.
     pub fn bare(config: &AuthConfig) -> TokenMinter {
-        TokenMinter { config: config.clone() }
+        TokenMinter {
+            config: config.clone(),
+        }
     }
 
     pub async fn signup(&self, input: SignupInput) -> AuthResult<User> {
@@ -186,16 +202,9 @@ where
         };
         self.sessions.create_session(session.clone()).await?;
 
-        let access = self.mint_access_token(
-            &user.id,
-            &user.tenant_id,
-            &session.id,
-        )?;
-        let refresh = self.mint_refresh_token(
-            &user.id,
-            &user.tenant_id,
-            &session.refresh_token_id,
-        )?;
+        let access = self.mint_access_token(&user.id, &user.tenant_id, &session.id)?;
+        let refresh =
+            self.mint_refresh_token(&user.id, &user.tenant_id, &session.refresh_token_id)?;
 
         self.emit_event(
             EventType::Login,
@@ -348,9 +357,7 @@ where
 
         let mut links_vec = user.oauth_accounts.clone();
         links_vec.push(linked_account.clone());
-        self.users
-            .update_oauth_links(&user_id, links_vec)
-            .await?;
+        self.users.update_oauth_links(&user_id, links_vec).await?;
 
         let updated = self
             .users

@@ -121,7 +121,10 @@ pub fn issue_id_token(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuthConfig, models::{TenantId, UserId}};
+    use crate::{
+        AuthConfig,
+        models::{TenantId, UserId},
+    };
     use uuid::Uuid;
 
     fn config() -> AuthConfig {
@@ -144,9 +147,8 @@ mod tests {
         let cfg = config();
         let uid = UserId(Uuid::new_v4());
         let tid = TenantId("tenant1".to_string());
-        let token = issue_id_token(&cfg, &uid, &tid, Some("u@example.com"), Some(true), 3600)
-            .unwrap();
+        let token =
+            issue_id_token(&cfg, &uid, &tid, Some("u@example.com"), Some(true), 3600).unwrap();
         assert!(!token.is_empty());
     }
 }
-

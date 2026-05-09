@@ -45,11 +45,7 @@ async fn auth_ui_tail(Path(tail): Path<String>) -> impl IntoResponse {
         return ([(header::CONTENT_TYPE, content_type)], content).into_response();
     }
     if let Some(page) = ui::auth_ui_page(tail.trim_matches('/')) {
-        return (
-            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
-            page,
-        )
-            .into_response();
+        return ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], page).into_response();
     }
     StatusCode::NOT_FOUND.into_response()
 }
