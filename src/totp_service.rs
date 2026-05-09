@@ -38,7 +38,9 @@ pub fn setup_totp(account_name: &str, issuer: &str) -> AuthResult<TotpSetup> {
         TOTP_DIGITS,
         1,
         TOTP_STEP,
-        secret.to_bytes().map_err(|err| AuthError::Crypto(format!("totp secret: {err}")))?,
+        secret
+            .to_bytes()
+            .map_err(|err| AuthError::Crypto(format!("totp secret: {err}")))?,
         Some(issuer.to_string()),
         account_name.to_string(),
     )

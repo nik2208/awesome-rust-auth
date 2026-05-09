@@ -23,8 +23,8 @@ use crate::{
     config::AuthConfig,
     error::{AuthError, AuthResult},
     models::{
-        AccessToken, Event, EventType, OtpRecord, RefreshToken, RequestOtpInput, Session,
-        TenantId, UserId, VerifyOtpInput,
+        AccessToken, Event, EventType, OtpRecord, RefreshToken, RequestOtpInput, Session, TenantId,
+        UserId, VerifyOtpInput,
     },
     service::AuthService,
     traits::{EventBus, OtpStore, SessionStore, TelemetryStore, UserStore},

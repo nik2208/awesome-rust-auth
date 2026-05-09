@@ -102,17 +102,16 @@ where
             .await?
             .ok_or(AuthError::NotFound)?;
 
-        let hash = user
-            .password_hash
-            .ok_or(AuthError::InvalidCredentials)?;
-        let parsed =
-            PasswordHash::new(&hash).map_err(|err| AuthError::Crypto(err.to_string()))?;
+        let hash = user.password_hash.ok_or(AuthError::InvalidCredentials)?;
+        let parsed = PasswordHash::new(&hash).map_err(|err| AuthError::Crypto(err.to_string()))?;
         Argon2::default()
             .verify_password(input.current_password.as_bytes(), &parsed)
             .map_err(|_| AuthError::InvalidCredentials)?;
 
         let new_hash = hash_password(&input.new_password)?;
-        self.users.set_password_hash(&input.user_id, &new_hash).await?;
+        self.users
+            .set_password_hash(&input.user_id, &new_hash)
+            .await?;
 
         self.emit(
             EventType::PasswordReset,
@@ -291,9 +290,9 @@ where
             return Err(AuthError::InvalidToken);
         }
 
-        let new_email = record
-            .new_email
-            .ok_or_else(|| AuthError::Validation("token is not an email-change token".to_string()))?;
+        let new_email = record.new_email.ok_or_else(|| {
+            AuthError::Validation("token is not an email-change token".to_string())
+        })?;
 
         self.users.update_email(&record.user_id, &new_email).await?;
 

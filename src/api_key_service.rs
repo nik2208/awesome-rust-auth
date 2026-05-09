@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 use crate::{
     error::{AuthError, AuthResult},
-    models::{ApiKey, IssuedApiKey, IssueApiKeyInput},
+    models::{ApiKey, IssueApiKeyInput, IssuedApiKey},
     traits::ApiKeyStore,
 };
 
@@ -96,10 +96,7 @@ impl<K: ApiKeyStore> ApiKeyManager<K> {
     }
 
     /// Lists all API keys for a user.
-    pub async fn list_for_user(
-        &self,
-        user_id: &crate::models::UserId,
-    ) -> AuthResult<Vec<ApiKey>> {
+    pub async fn list_for_user(&self, user_id: &crate::models::UserId) -> AuthResult<Vec<ApiKey>> {
         self.store.list_api_keys_for_user(user_id).await
     }
 }
