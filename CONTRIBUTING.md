@@ -51,7 +51,7 @@ uphold this code. Please report unacceptable behaviour to the maintainers.
 
 ### Prerequisites
 
-- [Rust](https://www.rust-lang.org/tools/install) stable (≥ 1.85.0)
+- [Rust](https://www.rust-lang.org/tools/install) stable (≥ 1.86.0)
 
 ### Building
 

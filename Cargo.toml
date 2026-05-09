@@ -2,7 +2,7 @@
 name = "awesome-rust-auth"
 version = "1.9.0"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.86.0"
 description = "Framework-agnostic Rust authentication crate inspired by awesome-node-auth"
 license = "MIT"
 repository = "https://github.com/nik2208/awesome-rust-auth"
@@ -22,7 +22,7 @@ validator = { version = "0.20", features = ["derive"] }
 jsonwebtoken = "9"
 argon2 = "0.5"
 rand = "0.8"
-time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
+time = { version = "=0.3.45", features = ["serde", "formatting", "parsing"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 totp-rs = { version = "5", default-features = false, features = ["gen_secret", "otpauth"] }
 hmac = "0.12"
